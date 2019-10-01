@@ -1,0 +1,16 @@
+[package]
+name = "oxide"
+version = "0.1.0"
+authors = ["Alejandro Gaviria <mr.gaviria@gmail.com>"]
+description = "Web app using Rust lang."
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0.101", features = ["derive"] }
+toml = "0.5.3"
+failure = "0.1.5"
+
+[workspace]
+members = [
+  "sentry",
+]
