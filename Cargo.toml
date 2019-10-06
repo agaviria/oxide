@@ -1,6 +1,6 @@
 [package]
 name = "oxide"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Alejandro Gaviria <mr.gaviria@gmail.com>"]
 description = "Web app using Rust lang."
 edition = "2018"
