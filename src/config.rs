@@ -15,12 +15,22 @@ pub struct Cfg {
     pub server: ServerCfg,
     // /// Log mechanism configuration
     // pub log: LogCfg,
+    /// Persistance storage configuration
+    pub database: StorageCfg,
 }
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-// Server configuration key/values
+/// Server configuration key/values.
 pub struct ServerCfg {
+    /// The full server URL
+    pub url: String,
+}
+
+#[derive(Clone, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Persistance storage configuration key/values.
+pub struct StorageCfg {
     /// The full server URL
     pub url: String,
 }
@@ -48,6 +58,16 @@ impl Cfg {
         Ok(cfg)
     }
 }
+
+// impl FromStr for Cfg {
+//     type Err = failure::Error;
+
+//     /// Load a `Cfg` from some string.
+//     fn from(src: &str) -> Result<Self, Self::Err> {
+//         toml::from_str(src)
+//             .map_err(|e| format_err!("Failed to load config from: {}", e))
+//     }
+// }
 
 #[cfg(test)]
 mod test {
