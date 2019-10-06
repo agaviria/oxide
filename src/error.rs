@@ -6,22 +6,18 @@ use std::fmt::{self, Display};
 /// convenience alias wrapper Result.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-/// The error type used in `libyobicash`.
+#[derive(Debug, Clone, Copy, Fail)]
+pub enum ErrorKind {
+    #[fail(display="From Failure")]
+    FromFailure,
+}
+
 #[derive(Debug)]
 pub struct Error {
     /// Inner `Context` with the `Fail` implementor.
     inner: Context<ErrorKind>,
 }
 
-
-/// The different types of errors used in `libyobicash`.
-#[derive(Debug, Clone, Copy, Fail)]
-pub enum ErrorKind {
-    #[fail(display="From Failure")]
-    FromFailure,
-    // #[fail(display="Magic Crypt failure: {:?}", _0)]
-    // MagicCryptError(CryptError),
-}
 
 impl Fail for Error {
     fn cause(&self) -> Option<&dyn Fail> {
@@ -38,6 +34,7 @@ impl Display for Error {
         Display::fmt(&self.inner, f)
     }
 }
+
 impl Error {
     pub fn kind(&self) -> ErrorKind {
         *self.inner.get_context()
