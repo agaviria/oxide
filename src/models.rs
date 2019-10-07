@@ -63,15 +63,17 @@ impl User {
 #[derive(Debug, Clone, Insertable, Validate)]
 #[table_name = "users"]
 pub struct NewUser {
-    #[validate(length(min = 2, max = 40))]
+    #[validate(length(min = 3, max = 40))]
     pub username: String,
 
-    #[validate(length(max = 255))]
+    #[validate(length(max = 255, message = "Maximum of 255 chars allowed as email field"))]
     #[validate(email)]
     pub email: String,
 
     #[validate(length(min = 3, max = 40))]
     pub display_name: String,
+
+    #[validate(length(min = 6, message = "Insecure password. Minimum of 6 chars required"))]
     pub password: String,
     is_active: bool,
     is_verified: bool,
