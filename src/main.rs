@@ -1,12 +1,17 @@
-#[macro_use]
-#[cfg(feature = "sentry")] pub mod sentry;
 #[macro_use] extern crate failure;
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate validator_derive;
 
+#[macro_use]
+#[cfg(feature = "sentry")]
+pub mod sentry;
 mod config;
 mod error;
 mod exception;
+mod models;
 mod payload;
 mod rate_limit;
+mod schema;
 mod utils;
 
 use std::env;
@@ -32,16 +37,16 @@ fn main() -> Result<(), Terminator> {
         .and(
             warp::path!("version")
             .map(|| payload::ResponseBuilder::ok()
-                 .body(env!("CARGO_PKG_VERSION")
-                 )
+                .body(env!("CARGO_PKG_VERSION")
+                )
             )
             .or(path!("time")
                 .map(|| payload::ResponseBuilder::ok()
-                     .body(Utc::now().to_rfc3339())
+                    .body(Utc::now().to_rfc3339())
                 )
             )
             .unify(),
-            )
+        )
         .and(warp::header("Accept"))
         .map(|resp: payload::Response, _accept: String| {
             let mut http_resp_builder = warp::http::response::Builder::new();

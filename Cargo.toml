@@ -11,7 +11,7 @@ toml = "0.5.3"
 failure = "0.1.5"
 futures = "0.1.29"
 warp = "0.1.20"
-diesel =  { version = "1.4.2", "features" = ["postgres", "r2d2"] }
+diesel =  { version = "1.4.2", features = ["chrono", "postgres", "r2d2"] }
 terminator = "0.1.0"
 femme = "1.2.0"
 log = "0.4.8"
@@ -20,7 +20,9 @@ tokio-threadpool = "0.1.16"
 ratelimit_meter = "5.0.0"
 erased-serde = "0.3.9"
 serde_json = "1.0.41"
-chrono = "0.4.9"
+chrono = { version = "0.4.9", features = ["serde"] }
+validator_derive = "0.9.0"
+validator = "0.9.0"
 
 [workspace]
 members = [
