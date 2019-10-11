@@ -27,7 +27,7 @@ impl HashVersion {
 }
 
 /// Hashing algorithm v1, using Argon2id variant with 256-bit salt.
-struct V1Hash {
+pub struct V1Hash {
 	pub salt: [u8; SALT_SIZE],
 	pub hash: [u8; 32],
 }
@@ -55,7 +55,7 @@ impl V1Hash {
 		for (&x, p) in encrypt.into_bytes()
 			.iter().zip(hash.iter_mut()){
 				*p = x;
-			}
+		}
 
 		Ok (V1Hash { salt, hash })
 	}
@@ -69,11 +69,11 @@ impl V1Hash {
 			.with_password(password)
 			.verify()
 			.is_ok()
-			{
-				true
-			} else {
-				false
-			};
+		{
+			true
+		} else {
+			false
+		};
 
 		Ok(is_valid)
 
@@ -93,7 +93,7 @@ impl V1Hash {
 			salt.copy_from_slice(salt_byte);
 			hash.copy_from_slice(hash_byte);
 			Ok(V1Hash { salt, hash } )
-		}
+	}
 }
 
 impl FromStr for V1Hash {
@@ -128,7 +128,7 @@ impl ToString for V1Hash {
 			base64::encode(&self.salt),
 			// base64::encode(&self.hash).as_ref(),
 			base64::encode(&self.hash),
-			);
+		);
 		as_str
 	}
 }
@@ -178,9 +178,9 @@ pub fn check_password(pwd: &str, hash: &str) -> bool {
 pub fn load_env_var(env: &str) -> Result<SecretKey<'static>, Error> {
 	let _path = dotenv::from_path("../sentry.env")
 		.map_err(|e|
-						 format_err!(
-							 "Failed to load env file. Cause: {}", e
-						 ))?;
+			format_err!(
+				"Failed to load env file. Cause: {}", e
+			))?;
 	let env_var = std::env::var(env)
 		.expect("Please inspect env variable exists");
 

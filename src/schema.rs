@@ -1,7 +1,7 @@
 table! {
-    users (id) {
-        id -> Int4,
-        username -> Varchar,
+    users (uuid) {
+        uuid -> Uuid,
+        user_name -> Varchar,
         display_name -> Varchar,
         email -> Varchar,
         password -> Varchar,

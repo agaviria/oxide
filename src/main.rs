@@ -1,35 +1,43 @@
-#[macro_use] extern crate failure;
+#![recursion_limit = "128"]
 #[macro_use] extern crate diesel;
-#[macro_use] extern crate validator_derive;
+#[macro_use] extern crate failure;
+#[macro_use(lazy_static)] extern crate lazy_static;
+#[macro_use] extern crate typename_derive;
+// #[macro_use] extern crate validator_derive;
 
 #[macro_use]
 #[cfg(feature = "sentry")]
-pub mod sentry;
+mod sentry;
 mod config;
+mod controllers;
 mod error;
+mod errr;
 mod exception;
 mod models;
 mod payload;
 mod rate_limit;
+mod storage;
 mod schema;
 mod utils;
 
 use std::env;
 
 use chrono::Utc;
+use config::CONF;
 use dotenv::dotenv;
 use femme::pretty::Logger;
 use log;
 use terminator::Terminator;
-use warp::{Filter, path};
+use warp::{self, Filter, http::Method, path};
 
 fn main() -> Result<(), Terminator> {
+    let conf = &CONF;
     dotenv().ok();
-    Logger::new().start(log::LevelFilter::Info)?;
+    Logger::new().start(conf.log_level_filter)?;
     log::info!("log mechanism initialized...");
 
     let db_pool = utils::pg_pool();
-    let _db = utils::pg(db_pool);
+    let db = utils::pg(db_pool);
 
     let rate_limiter = rate_limit::leaky_bucket();
 
@@ -44,6 +52,10 @@ fn main() -> Result<(), Terminator> {
                 .map(|| payload::ResponseBuilder::ok()
                     .body(Utc::now().to_rfc3339())
                 )
+            )
+            .unify()
+            .or(path!("users")
+                .and(controllers::user::router(db.clone().boxed()))
             )
             .unify(),
         )
@@ -65,8 +77,19 @@ fn main() -> Result<(), Terminator> {
             }
         })
     .recover(utils::handle_rejection)
-        .with(warp::log("oxide::api"));
-
+        .with(warp::log("oxide::api"))
+        .with(
+            warp::cors()
+            .allow_any_origin()
+            .allow_methods(vec![
+                Method::GET,
+                Method::POST,
+                Method::PUT,
+                Method::DELETE,
+                Method::OPTIONS,
+            ])
+            .allow_headers(vec!["Authorization", "Content-Type"]),
+        );
 
     warp::serve(bundle_oxide)
         .run(

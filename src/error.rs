@@ -1,3 +1,4 @@
+use diesel::result::Error as DieselError;
 use failure::{Fail, Context, Backtrace};
 use failure::Error as FailureError;
 
@@ -6,16 +7,28 @@ use std::fmt::{self, Display};
 /// convenience alias wrapper Result.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-#[derive(Debug, Clone, Copy, Fail)]
+#[derive(Debug, Clone, Fail)]
 pub enum ErrorKind {
     #[fail(display="From Failure")]
     FromFailure,
+    #[fail(display = "{}", _0)]
+    DatabaseError(String),
+    /// Document not found in database.  Results in status code 404
+    #[fail(display = "The resource ({}) requested could not be found in database", _0)]
+    NotFound{
+        type_name: String
+    },
+    /// The key used already exists in the database. Results in status code 402.
+    #[fail(display = "{}", _0)]
+    AlreadyExists(String),
+    #[fail(display = "{}", _0)]
+    InternalServerError(String),
 }
 
 #[derive(Debug)]
 pub struct Error {
     /// Inner `Context` with the `Fail` implementor.
-    inner: Context<ErrorKind>,
+    pub(crate) inner: Context<ErrorKind>,
 }
 
 
@@ -36,8 +49,8 @@ impl Display for Error {
 }
 
 impl Error {
-    pub fn kind(&self) -> ErrorKind {
-        *self.inner.get_context()
+    pub fn kind(&self) -> &ErrorKind {
+        self.inner.get_context()
     }
 }
 
@@ -54,7 +67,49 @@ impl From<Context<ErrorKind>> for Error {
 }
 
 impl From<FailureError> for Error {
-    fn from(e: FailureError) -> Error {
-        Error { inner: e.context(ErrorKind::FromFailure) }
+    fn from(error: FailureError) -> Error {
+        Error { inner: error.context(ErrorKind::FromFailure) }
+    }
+}
+
+impl From<diesel::result::Error> for Error {
+    fn from(error: DieselError) -> Error {
+        use diesel::result::DatabaseErrorKind;
+
+        match error {
+            diesel::result::Error::DatabaseError(err, _) => {
+                let err = match err {
+                    DatabaseErrorKind::ForeignKeyViolation => {
+                        "A foreign key constraint was violated in the database"
+                    }
+                    DatabaseErrorKind::SerializationFailure => {
+                        "Value failed to serialize in the database"
+                    }
+
+                    DatabaseErrorKind::UnableToSendCommand => {
+                        "Database protocol violation, possibly too many bound parameters"
+                    }
+
+                    DatabaseErrorKind::UniqueViolation => {
+                        "A unique constraint was violated in the database"
+                    }
+
+                    DatabaseErrorKind::__Unknown => {
+                        "An unknwon error occurred in the database"
+                    }
+                }
+                .to_string();
+            Error::from(ErrorKind::DatabaseError(err))
+
+            }
+            diesel::result::Error::NotFound => Error::from(ErrorKind::NotFound {
+                type_name: "Not implemented".to_string(),
+            }),
+            err => {
+                log::error!("unhandled database error: '{}'", err);
+                Error::from(ErrorKind::InternalServerError(
+                        format!("Internal Server Error")))
+            }
+        }
     }
 }
