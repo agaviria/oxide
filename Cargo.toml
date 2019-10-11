@@ -7,6 +7,7 @@ edition = "2018"
 
 [dependencies]
 serde = { version = "1.0.101", features = ["derive"] }
+sentry = { path = "./sentry" }
 toml = "0.5.3"
 failure = "0.1.5"
 futures = "0.1.29"
@@ -21,6 +22,13 @@ ratelimit_meter = "5.0.0"
 erased-serde = "0.3.9"
 serde_json = "1.0.41"
 chrono = "0.4.9"
+postgres = { version = "0.15.2", features = ["with-serde_json", "with-chrono"]}
+postgres-derive = "0.3.3"
+postgres-mapper = {  version = "0.1.1", features = ["postgres-support"] }
+postgres-mapper-derive = { version = "0.1.1", features = ["postgres-mapper", "postgres-support"] }
+r2d2 = "0.8.5"
+r2d2_postgres = "0.14.0"
+thiserror = "1.0.1"
 
 [workspace]
 members = [
